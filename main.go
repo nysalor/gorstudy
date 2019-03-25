@@ -33,7 +33,7 @@ func main() {
 		fmt.Println("multi mode(restricted)")
 		counters = restrict()
 	case "confluence":
-		fmt.Println("synchronize mode)")
+		fmt.Println("synchronize mode")
 		counters = confluence()
 	}
 
@@ -93,19 +93,20 @@ func multi() (counters []Counter) {
 	return
 }
 
-func restrict() (counters []Counter) {
-	c := make(chan bool, 10)
+func confluence() (counters []Counter) {
+	wg := &sync.WaitGroup{}
 	for _, str := range targets() {
-		c <- true
 		go func(s string) {
-			defer func() { <-c }()
+			wg.Add(1)
 			counters = append(counters, Counter{Str: s, Count: search(s, *filename)})
+			wg.Done()
 		}(str)
 	}
+	wg.Wait()
 	return
 }
 
-func confluence() (counters []Counter) {
+func restrict() (counters []Counter) {
 	c := make(chan bool, 10)
 	wg := &sync.WaitGroup{}
 	for _, str := range targets() {
